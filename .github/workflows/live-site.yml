@@ -2,6 +2,8 @@ name: live site
 
 # Once a day: is the script served on kvantix.tech byte for byte the one in this repository?
 on:
+  push:
+    paths: [".github/workflows/live-site.yml", "site/**"]
   schedule:
     - cron: "23 5 * * *"
   workflow_dispatch:
