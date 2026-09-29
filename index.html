@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- No network at all: this page cannot load or send anything. Scripts are pinned by hash. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-tgvQvZ90zgaQb6k6/YBp8GHR6pIfuZueWncstiNLNZc=' 'sha256-ICYOTulX7J+B13aDC+19jtllHJQog9zwR41a0fQc/yo='; style-src 'unsafe-inline'; img-src data:; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Lock your prediction · Kvantix</title>
+<meta name="description" content="Seal a prediction in your browser with SHA-256 and a secret key. Publish the seal now, reveal the text later. Works offline. Nothing is sent anywhere.">
+<style>
+:root{color-scheme:dark;--bg:#07080B;--panel:#0E1016;--line:#1D2029;--ink:#ECEEF2;--mute:#9A9FAA;--gold:#E7B24C;--good:#4CC38A;--warn:#E8A33D;
+  --mono:ui-monospace,SFMono-Regular,"IBM Plex Mono",Menlo,Consolas,monospace;--sans:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--sans);
+  background-image:radial-gradient(900px 480px at 85% -10%,rgba(231,178,76,.14),transparent 65%)}
+a{color:var(--gold);text-underline-offset:3px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+header{padding:28px 0 8px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font:700 18px/1 var(--sans);letter-spacing:.16em}.brand b{color:var(--gold)}
+.pill{font:500 12px/1 var(--mono);letter-spacing:.12em;color:var(--mute);border:1px solid var(--line);border-radius:99px;padding:7px 12px}
+h1{font:600 clamp(34px,6vw,56px)/1.05 var(--sans);letter-spacing:-.03em;margin:36px 0 14px}
+h1 span{color:var(--gold)}
+.lede{color:var(--mute);max-width:680px;font-size:18px;margin:0 0 18px}
+.trust{list-style:none;padding:0;margin:0 0 36px;display:flex;flex-wrap:wrap;gap:8px 22px;font:500 13px/1.4 var(--mono);color:var(--ink)}
+.trust li:before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--gold);margin-right:9px;vertical-align:1px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;min-width:0}
+.head{display:flex;justify-content:space-between;gap:10px;font:500 12px/1.3 var(--mono);letter-spacing:.1em;color:var(--mute);margin-bottom:16px}
+.state{color:var(--gold)}
+label{display:block;font-weight:600;margin:0 0 6px}
+textarea,input[type=text],input[type=date]{width:100%;background:#07080B;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:12px;font:15px/1.5 var(--sans)}
+textarea{min-height:130px;resize:vertical}
+textarea.mono,input.mono{font:13px/1.5 var(--mono)}
+textarea:focus,input:focus{outline:2px solid var(--gold);outline-offset:1px}
+.field{margin-bottom:16px}
+.hint{display:block;color:var(--mute);font-size:13px;margin-top:6px}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+button{font:600 14px/1 var(--sans);border-radius:10px;padding:12px 16px;cursor:pointer;border:1px solid var(--gold)}
+button.primary{background:var(--gold);color:#111}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.err{color:var(--warn);margin:0 0 12px}
+.hashbox{margin:18px 0 14px;border:1px dashed var(--gold);border-radius:12px;padding:14px}
+.hashbox .k{font:500 11px/1 var(--mono);letter-spacing:.14em;color:var(--gold);margin-bottom:8px}
+.hashbox code{display:block;font:600 14px/1.5 var(--mono);word-break:break-all}
+.hashbox small{display:block;color:var(--mute);margin-top:8px}
+.note{color:var(--mute);font-size:14px;margin:14px 0 0}
+.note b{color:var(--ink)}
+.verdict{margin-top:16px;border-radius:10px;padding:12px 14px;border:1px solid var(--line)}
+.verdict.good{border-color:var(--good)}.verdict.good b{color:var(--good)}
+.verdict.warn{border-color:var(--warn)}.verdict.warn b{color:var(--warn)}
+.filepick{position:relative;cursor:pointer;text-decoration:underline;text-underline-offset:3px;font-weight:400;display:inline}
+.filepick input{position:absolute;opacity:0;width:1px;height:1px}
+section.how{margin:48px 0 20px}
+h2{font:600 26px/1.2 var(--sans);letter-spacing:-.02em;margin:0 0 18px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media (max-width:860px){.cards{grid-template-columns:1fr}}
+.card{border:1px solid var(--line);border-radius:14px;padding:18px;background:rgba(14,16,22,.6)}
+.card .k{font:500 11px/1 var(--mono);letter-spacing:.14em;color:var(--gold)}
+.card h3{margin:10px 0 6px;font-size:17px}
+.card p{margin:0;color:var(--mute);font-size:14.5px}
+pre{background:#07080B;border:1px solid var(--line);border-radius:10px;padding:12px;overflow-x:auto;font:13px/1.5 var(--mono);color:var(--ink)}
+footer{border-top:1px solid var(--line);margin-top:48px;padding:22px 0 40px;color:var(--mute);font-size:13px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">KVAN<b>TIX</b></div>
+    <div class="pill">STANDALONE · WORKS OFFLINE</div>
+  </header>
+
+  <h1>Lock your <span>prediction.</span></h1>
+  <p class="lede">Write it down today and prove later that you called it. Your text is sealed in this browser and never leaves it. You publish the seal. The text stays with you until you reveal it.</p>
+  <ul class="trust">
+    <li>SHA-256 + a random 128-bit key</li>
+    <li>No network: blocked by this page's own security policy</li>
+    <li>Same seal as kvantix.tech</li>
+  </ul>
+
+  <div id="nosupport" class="panel" hidden><b>Not supported.</b> This browser can't compute SHA-256 here. Try an up-to-date Chrome, Firefox, Safari or Edge.</div>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="head"><span>1 · SEAL · stays in your browser</span><span class="state" id="state">READY</span></div>
+      <form id="seal-form" novalidate>
+        <div class="field">
+          <label for="text">Your prediction</label>
+          <textarea id="text" maxlength="2000" placeholder="Example: Bitcoin closes 2026 above $100,000 on Gemini." autocomplete="off"></textarea>
+          <span class="hint"><span id="count">0 / 2000</span> · Be specific: what, how much, by when, according to which source.</span>
+        </div>
+        <div class="field">
+          <label for="reveal">Planned reveal date (optional)</label>
+          <input type="date" id="reveal">
+          <span class="hint">Only used in the text you publish. It is not part of the seal.</span>
+        </div>
+        <p class="err" id="err" role="alert" hidden></p>
+        <div class="btns"><button type="submit" class="primary" id="go">Seal it</button></div>
+        <div id="out" hidden>
+          <div class="hashbox">
+            <div class="k">YOUR SEAL · PUBLISH THIS</div>
+            <code id="hash"></code>
+            <small>Sealed <span id="at"></span> by your device clock. The time proof is where you publish it.</small>
+          </div>
+          <div class="btns">
+            <button type="button" class="primary" id="save">Download receipt</button>
+            <button type="button" class="ghost" id="copypost">Copy text to post</button>
+            <button type="button" class="ghost" id="copyhash">Copy seal</button>
+          </div>
+          <p class="note"><b>Save the receipt now.</b> It holds your text and the secret key. Without it nobody can prove what you wrote. Then publish the seal somewhere with a date: a post, an email, a group chat.</p>
+          <p><button type="button" class="ghost" id="reset">Seal another prediction</button></p>
+        </div>
+      </form>
+    </div>
+
+    <div class="panel">
+      <div class="head"><span>2 · REVEAL &amp; VERIFY · for you or anyone</span><span class="state">READY</span></div>
+      <form id="verify-form" novalidate>
+        <div class="field">
+          <label for="receipt">The receipt</label>
+          <textarea class="mono" id="receipt" placeholder="Paste the whole receipt here, or choose the file below." autocomplete="off" spellcheck="false"></textarea>
+          <span class="hint"><label class="filepick">Choose the receipt file<input type="file" id="file" accept=".txt,text/plain"></label> · read in your browser, not uploaded.</span>
+        </div>
+        <div class="field">
+          <label for="published">The seal that was published</label>
+          <input type="text" class="mono" id="published" placeholder="64 characters, 0–9 and a–f" maxlength="80" autocomplete="off" spellcheck="false">
+          <span class="hint">Copy it from the original post or message, not from the receipt.</span>
+        </div>
+        <div class="btns"><button type="submit" class="primary" id="check">Check it</button></div>
+        <div class="verdict" id="verdict" role="status" aria-live="polite" hidden></div>
+      </form>
+    </div>
+  </div>
+
+  <section class="how">
+    <h2>How the seal works</h2>
+    <div class="cards">
+      <div class="card"><div class="k">THE SEAL</div><h3>A fingerprint of your text</h3><p>SHA-256 turns the text into 64 characters. Change one letter, comma or line break and the seal changes completely. Nobody can work backwards from the seal to the text.</p></div>
+      <div class="card"><div class="k">THE KEY</div><h3>Stops anyone guessing</h3><p>“Denmark wins” is easy to guess and check. A random secret key is sealed with your text, so nobody can test guesses against your seal before you reveal it.</p></div>
+      <div class="card"><div class="k">THE TIME</div><h3>Comes from where you publish</h3><p>Your device's clock proves nothing. A dated post, email or message with the seal in it does. Nothing is stored anywhere, so the proof is yours.</p></div>
+    </div>
+    <h2 style="margin-top:36px">Check it without this page</h2>
+<pre>printf 'kvantix-seal-v1\n%s\n%s' "$KEY" "$TEXT" | sha256sum
+python3 verify.py check receipt.txt --seal &lt;published seal&gt;
+node verify.mjs check receipt.txt --seal &lt;published seal&gt;</pre>
+    <p class="note">The text is compared after three normalisation steps: line breaks become \n, Unicode NFC, surrounding whitespace removed. See SPEC.md.</p>
+    <h2 style="margin-top:36px">What a seal can't do</h2>
+    <p class="note">It proves <b>what</b> you wrote, not that it was your only prediction. Sealing ten guesses and revealing the one that came true proves nothing. A real track record shows every call, including the misses. That is the rule behind every forward test Kvantix runs.</p>
+  </section>
+
+  <footer>
+    Kvantix seal v1 · MIT licence · Kvantix (CVR 46296036), Hjørring, Denmark ·
+    <a href="https://kvantix.tech/playground/lock-your-prediction/" rel="noreferrer">kvantix.tech</a> ·
+    <a href="https://github.com/kvantixtech/lock-your-prediction" rel="noreferrer">source</a>
+  </footer>
+</div>
+<script>/* Kvantix seal v1: browser core (also loads in Node 18+ for the tests). SPEC.md.
+   Uses Web Crypto (crypto.subtle) and crypto.getRandomValues. Sends nothing anywhere. */
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.KvxSeal = factory();
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+  var PREFIX = "kvantix-seal-v1\n";
+  var SEP = "--- prediction (everything below this line, exactly) ---";
+  var PAGE = "https://kvantix.tech/playground/lock-your-prediction/";
+
+  function webcrypto() {
+    if (typeof crypto !== "undefined" && crypto.subtle) return crypto;
+    if (typeof require === "function") return require("crypto").webcrypto; // Node 18
+    throw new Error("Web Crypto is not available");
+  }
+  function hex(buf) {
+    var b = new Uint8Array(buf), s = "";
+    for (var i = 0; i < b.length; i++) s += ("0" + b[i].toString(16)).slice(-2);
+    return s;
+  }
+  function normalise(t) {
+    t = String(t == null ? "" : t).replace(/\r\n?/g, "\n");
+    if (t.normalize) t = t.normalize("NFC");
+    return t.trim();
+  }
+  function newKey() {
+    var b = new Uint8Array(16);
+    webcrypto().getRandomValues(b);
+    return hex(b.buffer);
+  }
+  function seal(key, text) {
+    if (!/^[0-9a-f]{32}$/.test(key)) return Promise.reject(new Error("key must be 32 lowercase hex characters"));
+    var data = new TextEncoder().encode(PREFIX + key + "\n" + normalise(text));
+    return webcrypto().subtle.digest("SHA-256", data).then(hex);
+  }
+  function parseReceipt(raw) {
+    raw = String(raw || "").replace(/\r\n?/g, "\n");
+    var i = raw.indexOf(SEP);
+    if (i < 0) return null;
+    var head = raw.slice(0, i), body = raw.slice(i + SEP.length).replace(/^\n/, "");
+    var km = head.match(/^key:\s*([0-9a-f]{32})\s*$/mi), sm = head.match(/^seal:\s*([0-9a-f]{64})\s*$/mi);
+    if (!km) return null;
+    return { key: km[1].toLowerCase(), body: body, seal: sm ? sm[1].toLowerCase() : "" };
+  }
+  function receipt(r) {
+    return "KVANTIX SEAL v1\n" +
+      "seal: " + r.seal + "\n" +
+      "key: " + r.key + "\n" +
+      "sealed (your device clock, not a proof): " + r.at + "\n" +
+      (r.reveal ? "planned reveal: " + r.reveal + "\n" : "") +
+      "verify: " + PAGE + "\n" +
+      SEP + "\n" + normalise(r.text) + "\n";
+  }
+  return { PREFIX: PREFIX, SEP: SEP, PAGE: PAGE, normalise: normalise, newKey: newKey, seal: seal,
+           parseReceipt: parseReceipt, receipt: receipt };
+});
+</script>
+<script>/* UI for the standalone page. All cryptography is in seal-core.js (KvxSeal). */
+(function () {
+  "use strict";
+  var S = window.KvxSeal, $ = function (id) { return document.getElementById(id); };
+  var ok = !!(window.crypto && crypto.subtle && crypto.getRandomValues && window.TextEncoder);
+  if (!ok) { $("nosupport").hidden = false; $("go").disabled = true; $("check").disabled = true; return; }
+  var last = null;
+
+  function nowIso() { return new Date().toISOString().replace(/\.\d+Z$/, "Z"); }
+  function postText(r) {
+    return "I've sealed a prediction. Seal (SHA-256): " + r.seal +
+      (r.reveal ? ". I'll reveal it on " + r.reveal : ". I'll reveal it later") +
+      ". Anyone can check it: " + S.PAGE;
+  }
+  function copy(text, btn) {
+    var done = function () { var o = btn.textContent; btn.textContent = "Copied"; setTimeout(function () { btn.textContent = o; }, 1600); };
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+    function fallback() {
+      var ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); done(); } catch (e) {} document.body.removeChild(ta);
+    }
+  }
+  function download(name, text) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
+    a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+
+  var txt = $("text"), count = $("count");
+  txt.addEventListener("input", function () { count.textContent = S.normalise(txt.value).length + " / 2000"; });
+  $("seal-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var text = S.normalise(txt.value), err = $("err");
+    err.hidden = true;
+    if (text.length < 1) { err.textContent = "Write your prediction first."; err.hidden = false; return; }
+    if (text.length > 2000) { err.textContent = "Keep it under 2,000 characters."; err.hidden = false; return; }
+    var key = S.newKey(), reveal = $("reveal").value || "";
+    S.seal(key, text).then(function (h) {
+      last = { seal: h, key: key, text: text, at: nowIso(), reveal: reveal };
+      $("hash").textContent = h; $("at").textContent = last.at;
+      $("out").hidden = false; $("state").textContent = "SEALED";
+    });
+  });
+  $("copyhash").addEventListener("click", function () { if (last) copy(last.seal, this); });
+  $("copypost").addEventListener("click", function () { if (last) copy(postText(last), this); });
+  $("save").addEventListener("click", function () { if (last) download("kvantix-seal-" + last.seal.slice(0, 12) + ".txt", S.receipt(last)); });
+  $("reset").addEventListener("click", function () {
+    last = null; txt.value = ""; $("reveal").value = ""; count.textContent = "0 / 2000";
+    $("out").hidden = true; $("state").textContent = "READY"; txt.focus();
+  });
+
+  $("file").addEventListener("change", function () {
+    var f = this.files && this.files[0]; if (!f) return;
+    var rd = new FileReader(); rd.onload = function () { $("receipt").value = String(rd.result || ""); }; rd.readAsText(f);
+  });
+  $("verify-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var out = $("verdict"), r = S.parseReceipt($("receipt").value);
+    var want = String($("published").value || "").trim().toLowerCase();
+    out.hidden = false; out.textContent = "";
+    if (!r) { out.className = "verdict warn"; out.textContent = "That doesn't look like a Kvantix receipt. Paste the whole file, including the key line and the line that starts with “--- prediction”."; return; }
+    var against = want || r.seal, note = want ? "" : " (checked against the seal written in the receipt: compare it with the one that was published)";
+    if (!/^[0-9a-f]{64}$/.test(against)) { out.className = "verdict warn"; out.textContent = "Paste the published seal: 64 characters, 0–9 and a–f."; return; }
+    S.seal(r.key, r.body).then(function (h) {
+      var b = document.createElement("b");
+      if (h === against) {
+        out.className = "verdict good"; b.textContent = "MATCH. "; out.appendChild(b);
+        out.appendChild(document.createTextNode("This exact text was sealed as " + h.slice(0, 16) + "…" + note + ". The seal proves what was written. When it was written is proven by where and when the seal was published."));
+      } else {
+        out.className = "verdict warn"; b.textContent = "NO MATCH. "; out.appendChild(b);
+        out.appendChild(document.createTextNode("The text and key give " + h.slice(0, 16) + "…, not " + against.slice(0, 16) + "…. Either the text was changed (even one character or line break counts), or it is a different key or seal."));
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

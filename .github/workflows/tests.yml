@@ -1,0 +1,61 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: verify.py (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.9", "3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python3 tests/test_python.py
+
+  node:
+    name: verify.mjs, browser core, kvantix.tech script (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["18", "20", "22"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: node tests/test_node.mjs
+      - run: node tests/test_site_js.mjs
+
+  shell:
+    name: printf | sha256sum (no Kvantix code)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash tests/test_shell.sh
+
+  consistency:
+    name: vectors, page build, site hash
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: test-vectors.json is what verify.py produces
+        run: python3 tools/make_vectors.py && git diff --exit-code test-vectors.json
+      - name: index.html is built from the sources in this commit
+        run: python3 tools/build_page.py --check
+      - name: site/SHA256SUMS matches site/kvx-seal.js
+        run: cd site && sha256sum -c SHA256SUMS

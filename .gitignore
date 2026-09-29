@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+kvantix-seal-*.txt
+live.js
+node_modules/

@@ -1,0 +1,96 @@
+{
+  "spec": "kvantix-seal-v1",
+  "vectors": [
+    {
+      "name": "docs example",
+      "key": "0123456789abcdef0123456789abcdef",
+      "input": "Bitcoin closes 2026 above $100,000 on Gemini.",
+      "text": "Bitcoin closes 2026 above $100,000 on Gemini.",
+      "seal": "4ab2b1de46a5f36fd60c51d47b7c835c5554c4e66355e081efec943e6cc569f2"
+    },
+    {
+      "name": "plain ascii",
+      "key": "9f2c4e71a0b35d68c1e7f40a2b96d3c5",
+      "input": "Denmark beats Norway 2-1 on 12 October.",
+      "text": "Denmark beats Norway 2-1 on 12 October.",
+      "seal": "6803b1107788d30638181e6a952b9d69b0cff5ac0e9ceb7feb9496c3d5c4f6a4"
+    },
+    {
+      "name": "windows line breaks become LF",
+      "key": "9f2c4e71a0b35d68c1e7f40a2b96d3c5",
+      "input": "Line one\r\nLine two\r\n",
+      "text": "Line one\nLine two",
+      "seal": "e23d1dd3ceac788b7a771a6fe4d38694b4b5755b73cbc6f5574516b05369620f"
+    },
+    {
+      "name": "old mac CR becomes LF",
+      "key": "9f2c4e71a0b35d68c1e7f40a2b96d3c5",
+      "input": "Line one\rLine two",
+      "text": "Line one\nLine two",
+      "seal": "e23d1dd3ceac788b7a771a6fe4d38694b4b5755b73cbc6f5574516b05369620f"
+    },
+    {
+      "name": "surrounding spaces, tabs and newlines trimmed",
+      "key": "9f2c4e71a0b35d68c1e7f40a2b96d3c5",
+      "input": " \t\n  Rain in Hj\u00f8rring on Saturday. \n\n",
+      "text": "Rain in Hj\u00f8rring on Saturday.",
+      "seal": "094db408a4c43f9ae0e0cf016b57c76c47cebdd0aac2076ffd56fefa5d313549"
+    },
+    {
+      "name": "inner spacing and blank lines kept",
+      "key": "9f2c4e71a0b35d68c1e7f40a2b96d3c5",
+      "input": "a  b\n\n\nc",
+      "text": "a  b\n\n\nc",
+      "seal": "f1bcd9113fb12aff428b4edc3991384e0006589842ae02bf28367335dca89d88"
+    },
+    {
+      "name": "NFD input is normalised to NFC",
+      "key": "9f2c4e71a0b35d68c1e7f40a2b96d3c5",
+      "input": "Cafe\u0301 au lait",
+      "text": "Caf\u00e9 au lait",
+      "seal": "6d5fe925a597d6cd3da003f188119142863f593ead0bb545d05da5b7802e7a22"
+    },
+    {
+      "name": "NFC input unchanged",
+      "key": "9f2c4e71a0b35d68c1e7f40a2b96d3c5",
+      "input": "Caf\u00e9 au lait",
+      "text": "Caf\u00e9 au lait",
+      "seal": "6d5fe925a597d6cd3da003f188119142863f593ead0bb545d05da5b7802e7a22"
+    },
+    {
+      "name": "danish letters",
+      "key": "9f2c4e71a0b35d68c1e7f40a2b96d3c5",
+      "input": "Hj\u00f8rring f\u00e5r 30 mm regn p\u00e5 l\u00f8rdag. \u00c6bler, \u00f8l og \u00e5l.",
+      "text": "Hj\u00f8rring f\u00e5r 30 mm regn p\u00e5 l\u00f8rdag. \u00c6bler, \u00f8l og \u00e5l.",
+      "seal": "5509156476042bc6177e20e4cf75713366e5feb68ceca9b4021245bf614b7e0f"
+    },
+    {
+      "name": "emoji and CJK",
+      "key": "9f2c4e71a0b35d68c1e7f40a2b96d3c5",
+      "input": "\ud83d\ude80 BTC > 100k \u00b7 \u5929\u6c14\u9884\u62a5",
+      "text": "\ud83d\ude80 BTC > 100k \u00b7 \u5929\u6c14\u9884\u62a5",
+      "seal": "1c6afe713de3ede91defa5e634128b88184e8bd3f9c56d6cb8abb84ff683af59"
+    },
+    {
+      "name": "BOM and no-break space are trimmed (ECMAScript trim)",
+      "key": "9f2c4e71a0b35d68c1e7f40a2b96d3c5",
+      "input": "\ufeff\u00a0prediction\u3000",
+      "text": "prediction",
+      "seal": "3ae9811f24426808ca4507a5830398f42e8af51fa866af934361dbc03d0530d4"
+    },
+    {
+      "name": "U+0085 and U+001F are NOT trimmed (unlike Python str.strip)",
+      "key": "9f2c4e71a0b35d68c1e7f40a2b96d3c5",
+      "input": "\u0085prediction\u001f",
+      "text": "\u0085prediction\u001f",
+      "seal": "f9748c2b136a38c91de25d30eaf738e4dd801b0d6e8be9317734f4b6aa08c896"
+    },
+    {
+      "name": "single character",
+      "key": "9f2c4e71a0b35d68c1e7f40a2b96d3c5",
+      "input": "x",
+      "text": "x",
+      "seal": "a5ce9779f8d6793d39723605691c0264625c174588a0b4cb0d8f9e34db295102"
+    }
+  ]
+}

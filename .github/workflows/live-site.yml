@@ -1,0 +1,34 @@
+name: live site
+
+# Once a day: is the script served on kvantix.tech byte for byte the one in this repository?
+on:
+  schedule:
+    - cron: "23 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch and compare
+        run: |
+          url="https://kvantix.tech/wp-content/uploads/kvx/kvx-seal.js"
+          curl -fsSL --retry 3 -A "kvantixtech/lock-your-prediction live check (github actions)" "$url" -o live.js
+          want=$(cut -d' ' -f1 site/SHA256SUMS)
+          got=$(sha256sum live.js | cut -d' ' -f1)
+          {
+            echo "| | SHA-256 |"
+            echo "|---|---|"
+            echo "| repository \`site/kvx-seal.js\` | \`$want\` |"
+            echo "| served at $url | \`$got\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$got" != "$want" ]; then
+            echo "The live file differs from the repository." >> "$GITHUB_STEP_SUMMARY"
+            diff <(cat site/kvx-seal.js) live.js | head -40 || true
+            exit 1
+          fi
+          echo "Identical." >> "$GITHUB_STEP_SUMMARY"
